@@ -1,0 +1,196 @@
+﻿@page "/"
+@inject HttpClient HttpClient
+@inject MovementListService listService
+@using System.Text.Json;
+@using System.Net.Http;
+
+<PageTitle>Index</PageTitle>
+<div class="mainPage">
+    @if(_mainVisibility){
+
+        @if (listService.CurrentMovementList() != null && listService.CurrentMovementList().Count > 0)
+        {
+            <button class="expectedBtn" @onclick=ShowOptions>Expected movement! @listService.CurrentMovementList()[0].MovementTime</button>
+        }
+        else{
+            <button class="notExpectedBtn">No movements are registred</button>
+        }
+    }
+    @if(_optionPageVisibility){
+        <div class="options">
+            <div class="soundBtn">
+                @if (_isSoundOn)
+                {
+                    <p class="switchText">Sound ON</p>
+                }
+                else{
+                    <p class="switchText">Sound OFF</p>
+                }
+                <label role="button" class="switch">
+                    @if (_isSoundOn)
+                    {
+                        <input type="checkbox" id="themeSwitch" checked @onclick="UpdateSoundValue">
+                    }
+                    else
+                    {
+                        <input type="checkbox" id="themeSwitch" @onclick="UpdateSoundValue">
+                    }
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="lightBtn">
+                @if (_isLightOn)
+                {
+                    <p class="switchText">Light ON</p>
+                }
+                else
+                {
+                    <p class="switchText">Light OFF</p>
+                }
+                <label role="button" class="switch">
+                    @if (_isLightOn)
+                    {
+                        <input type="checkbox" id="themeSwitch" checked @onclick="UpdateLightValue">
+                    }
+                    else
+                    {
+                        <input type="checkbox" id="themeSwitch" @onclick="UpdateLightValue">
+                    }
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <p role="button" class="skipBtn" @onclick=SkipOptions><span style='font-size:28px;'>&#8592;</span> Back</p>
+        </div>
+    }
+    <div class="lastMovements">
+        <h2 class="lastMovementsH2">Last movements</h2>
+        @if(listService.CurrentMovementList != null){
+            @foreach (var movement in listService.CurrentMovementList())
+            {
+                <table class="lastMovementsTable">
+                    <tr>
+                        <td>
+                            @movement.MovementTime
+                        </td>
+                    </tr>
+                </table>
+            }
+        }
+        else{
+            <p>Movement history is empty</p>
+        }
+    </div>
+</div>
+@code{
+    private bool _isLightOn = false;
+    private bool _isSoundOn = false;
+    private bool _mainVisibility = true;
+    private bool _optionPageVisibility = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await listService.UpdateMovements();
+
+        listService.OnChange += async () => await InvokeAsync(StateHasChanged);
+
+        // Get light value from db
+        var lightResponse = await HttpClient.GetAsync($"api/values/Light");
+        if(lightResponse.IsSuccessStatusCode){
+            var lightResponseContent = await lightResponse.Content.ReadAsStringAsync();
+
+            var lightValue = JsonSerializer.Deserialize<int>(lightResponseContent);
+
+            if(lightValue == 1){
+                _isLightOn = true;
+            }
+            else{
+                _isLightOn = false;
+            }
+        }
+
+        // Get sound value from db
+        var soundResponse = await HttpClient.GetAsync($"api/values/Sound");
+        if (soundResponse.IsSuccessStatusCode)
+        {
+            var soundResponseContent = await soundResponse.Content.ReadAsStringAsync();
+
+            var soundValue = JsonSerializer.Deserialize<int>(soundResponseContent);
+
+            if (soundValue == 1)
+            {
+                _isSoundOn = true;
+            }
+            else
+            {
+                _isSoundOn = false;
+            }
+        }
+    }
+    private async Task UpdateLightValue()
+    {
+        int value;
+        if(_isLightOn){
+            value = 0;
+        }
+        else{
+            value = 1;
+        }
+        try
+        {
+            var response = await HttpClient.PutAsJsonAsync($"api/values/Light", value);
+            if (response.IsSuccessStatusCode)
+            {
+                if(!_isLightOn){
+                    _isLightOn = true;
+                }
+                else{
+                    _isLightOn = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+    private async Task UpdateSoundValue(){
+        int value;
+        if (_isSoundOn)
+        {
+            value = 0;
+        }
+        else
+        {
+            value = 1;
+        }
+        try
+        {
+            var response = await HttpClient.PutAsJsonAsync($"api/values/Sound", value);
+            if (response.IsSuccessStatusCode)
+            {
+                if (!_isSoundOn)
+                {
+                    _isSoundOn = true;
+                }
+                else
+                {
+                    _isSoundOn = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+    private void ShowOptions()
+    {
+        _mainVisibility = false;
+        _optionPageVisibility = true;
+    }
+    private void SkipOptions()
+    {
+        _optionPageVisibility = false;
+        _mainVisibility = true;
+    }
+}
