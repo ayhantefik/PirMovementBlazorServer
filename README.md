@@ -19,3 +19,22 @@ Blazor Server
 <h2>Messaging protocol between Arduino and Web</h2>
 
 MQTT
+
+<h2>Setup Instructions</h2>
+
+<b>PirMovementArduino.ino</b>
+</br>
+Row 14: Type your IPV4
+</br>
+Row 15: Your MQTT broker host
+</br>
+</br>
+<b>appsettings.json</b>
+</br>
+Row 10: Database connection string
+</br>
+Row 13: Your host url
+</br>
+Row 16: Your MQTT broker host
+</br>
+Row 17: MQTT Port
