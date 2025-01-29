@@ -3,13 +3,15 @@
 1 - Arduino UNO R4 Wifi
 </br>
 1 - HC-SR501 Pir Motion Sensor
+</br>
 1 - Buzzer 100K
+</br>
 1 - Led
 
-<b>Web Application</b>
+<h2>Web Application</h2>
 
 Blazor Server
 
-<b>Messaging protocol between Arduino and Web</b>
+<h2>Messaging protocol between Arduino and Web</h2>
 
 MQTT
